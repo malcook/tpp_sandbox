@@ -1,0 +1,185 @@
+# -*- org-export-babel-evaluate: nil; org-export-allow-bind-keywords: t; -*-
+#+AUTHOR: Malcolm Cook;
+#+EMAIL: malcolm_cook@stowers.org
+#+TITLE: installing tpp on CentOS 7 - one man's journey
+
+#+SETUPFILE: ~mec/.emacs.d/org/SETUPFILE.org
+
+#+PROPERTY: header-args:R :session *R:SCI-004255-ZFPROT*
+# # :results value :exports both :colnames yes
+#+PROPERTY: header-args:sh :session *shell* :results output :exports both :colnames yes :width 10 :height 7.5 :units in
+#+PROPERTY: header-args:sqlite :db grn.db :results value :colnames yes
+#+OPTIONS: pri:t
+#+PRIORITIES: A C B D E
+
+* Purpose
+
+ - enable using TPP in our centos7 environment
+ - TODO: deploy as shared conda environment
+
+* Methods
+
+Adapt [[http://tools.proteomecenter.org/wiki/index.php?title=TPP_6.1.0:_Installing_on_Ubuntu_20.04_LTS][TPP 6.1.0: Installing on Ubuntu 20.04 LTS]] as needed.
+
+#+caption: install libraries
+#+begin_src  sh
+sudo yum install -y gd-devel
+sudo yum install -y libpng-devel
+sudo yum install -y zlib-devel
+sudo yum install -y bzip2-devel
+sudo yum install -y subversion
+sudo yum install -y build-essential
+sudo yum install -y perl
+sudo yum install -y zlib-devel
+sudo yum install -y libghc-bzlib-devel
+sudo yum install -y gnuplot
+sudo yum install -y unzip
+sudo yum install -y expat
+sudo yum install -y expat-devel #-devel
+sudo yum install -y libgd-devel
+sudo yum install -y r-base
+sudo yum install -y apache2 # NB: centos apache includes modules {rewrite,cgid} so no need for further installs
+
+## libs needed for compiler toolchain
+sudo yum install -y devtoolset-9
+sudo yum install -y glibc-devel	# for libc and libm (and friends) headers
+sudo yum install glibc-static # without which `g++ Comet.o -o comet.exe -static ...` (and others) fail with "cannot find {-lpthread,-lm,-lc} "
+
+## extra libs not mentioned in Ubuntu recipe or readme
+sudo yum install -y fann-devel 
+## extra libs from taken from release_6-1-0/installer_linux/install-prerequisites-centos-5_2.sh - unclear if actually needed in centos 7 but hey
+sudo yum install -y mcrypt
+sudo yum install -y swig
+#+end_src
+
+#+caption: get the source and unpack it in a working directory
+#+begin_src  sh
+mkdir ~/tpp_source #or somehwere you're going to build this thing
+cd ~tpp_source
+wget https://sourceforge.net/projects/sashimi/files/Trans-Proteomic%20Pipeline%20%28TPP%29/TPP%20v6.1%20%28Parhelion%29%20rev%200/TPP_6.1.0-src.tgz
+tar -zxvf TPP_6.1.0-src.tgz 
+#+end_src
+
+#+caption: create configuration file included by the make process to come
+#+begin_src  sh
+cd release_6-1-0
+echo 'INSTALL_DIR = /usr/local/tpp' > site.mk
+echo 'TPP_DATADIR = /data/tpp' >> site.mk # note: recommend not using just '/data', as advised
+echo 'TPP_BASEURL = /tpp' >> site.mk
+echo 'TPP_DATAURL = /tpp/data' >> site.mk
+echo 'TPP_PORT = 10401' >> site.mk
+#+end_src
+
+#+RESULTS:
+
+#+caption: create a user to own the tpp install, and directories to install and run the webserver
+#+begin_src  sh
+sudo useradd --system tpp # create tpp user with no home directory
+sudo mkdir /usr/local/tpp
+sudo mkdir -p /data/tpp
+sudo chown tpp.tpp /usr/local/tpp
+sudo chown apache /data/tpp /usr/local/tpp/{users,log} # assuming your webserver is running as the default `apache` user.
+#+end_src
+
+#+caption: move into source directory
+#+begin_src  sh
+cd trans_proteomic_pipeline
+#+end_src
+
+#+caption: get a little report on what tpp thinks you're building on
+#+begin_src  sh
+make info
+#+end_src
+
+#+RESULTS:
+#+begin_example
+ARCH = x86_64
+VENDOR = redhat
+SYSTEM = linux
+    OS = Linux
+
+TPP_VERSION = 6.1.0
+TPP_RELEASE = Parhelion
+TPP_BUILDID = TPP v6.1.0 Parhelion, Build 202206071204-exported (Linux-x86_64)
+
+    SRC_DIR = /n/sci/SCI-004255-ZFPROT/tpp/svn/trans_proteomic_pipeline
+  BUILD_DIR = /n/sci/SCI-004255-ZFPROT/tpp/svn/trans_proteomic_pipeline/build/linux-x86_64-release
+INSTALL_DIR = /usr/local/tpp
+
+   TPP_HOME = /usr/local/tpp
+TPP_DATADIR = /data/tpp
+TPP_BASEURL = /tpp
+TPP_DATAURL = /tpp/data
+
+ MZ5_SUPPORT is not enabled
+#+end_example
+
+#+caption: create your build environment.
+#+begin_src sh
+source /opt/rh/devtoolset-9/enable ## the newer compiler etc on your PATH
+export LD_LIBRARY_PATH=/usr/lib64:${LD_LIBRARY_PATH} ## needed for location of libc and libm else error: "/opt/rh/devtoolset-9/root/usr/libexec/gcc/x86_64-redhat-linux/9/ld: cannot find -lc"
+#+end_src
+
+#+caption: build it!
+#+begin_src sh
+make all ## NB: do NOT provide `-j` or `-k` options to make or problems will ensue.
+make all # yes, again!
+make all # keep doing this till nothing more is made!
+#+end_src
+
+#+caption: install it!
+#+begin_src sh
+# I'm installing from NFS share so can't install as root due to f-ing root squash
+sudo chown -R $USER /usr/local/tpp /data/tpp # just for a minute....
+make install
+# now set them back again, as planned
+sudo chown -R tpp.tpp /usr/local/tpp
+sudo chown -R apache /data/tpp /usr/local/tpp/{users,log}
+#+end_src
+
+#+caption: install any missing perl libraries
+#+begin_src  sh
+export PERL_MM_USE_DEFAULT=1
+yes | sudo cpan install CGI
+sudo cpan install XML::Parser
+yes | sudo cpan install XML::Twig
+sudo cpan install FindBin::libs
+yes | sudo cpan install JSON
+sudo cpan install Tie::IxHash
+sudo cpan install Statistics::Regression
+sudo cpan install Statistics::R 
+#+end_src
+
+#+caption: test the perl library installation
+#+begin_src  sh
+cd /usr/local/tpp/bin
+export PERL5LIB=/usr/local/tpp/lib/perl
+./test_tpi.pl
+#+end_src
+
+#+caption: create an apache configuration file
+#+begin_src sh
+cd /usr/local/tpp/conf
+
+# Check your location with: http://www.whatsmyip.org/ and then configure the permission rules accordingly
+# cat httpd-2.4-tpp.conf | sed 's/Require ip 10/Require ip 174.250.12/' > httpd-2.4-tpp-1.conf
+
+# Alternatively, you can allow traffic from anywhere. This might
+# expose your server to some security vulnerabilities, esp if you're
+# not running behind a firewall
+cat httpd-2.4-tpp.conf | sed 's/#Require all granted/Require all granted/' > httpd-2.4-tpp-1.conf
+#+end_src
+
+#+caption: install the apache configuration file
+#+begin_src  sh
+sudo cp -p /usr/local/tpp/conf/httpd-2.4-tpp-1.conf /etc/httpd/httpd-tpp.conf
+sudo systemctl reload apache2 
+#+end_src
+
+You're done.  Test it.
+
+
+
+
+
+
