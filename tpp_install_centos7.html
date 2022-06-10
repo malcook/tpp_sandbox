@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-06-10 Fri 17:42 -->
+<!-- 2022-06-10 Fri 18:05 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>installing tpp on CentOS 7 - one man's journey</title>
@@ -95,14 +95,30 @@ $("div.afterTable").html('<hr>');
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org83b9802">1. Purpose</a></li>
-<li><a href="#orgf9bd2d8">2. Methods</a></li>
+<li><a href="#org8747340">1. Purpose</a></li>
+<li><a href="#org59a37f0">2. Methods</a>
+<ul>
+<li><a href="#orgd420f0e">2.1. install libraries</a></li>
+<li><a href="#org93deecf">2.2. get the source and unpack it in a working directory</a></li>
+<li><a href="#orgfc7ced3">2.3. create configuration file included by the make process to come</a></li>
+<li><a href="#org4d60917">2.4. create a user to own the tpp install, and directories to install and run the webserver</a></li>
+<li><a href="#orge422cbd">2.5. move into source directory</a></li>
+<li><a href="#org8ee51d2">2.6. get a little report on what tpp thinks you're building on</a></li>
+<li><a href="#org0f89f3a">2.7. create your build environment.</a></li>
+<li><a href="#org9482d33">2.8. build it!</a></li>
+<li><a href="#org5f2dee6">2.9. install it!</a></li>
+<li><a href="#org7a17635">2.10. install any missing perl libraries</a></li>
+<li><a href="#orgc2aa9e5">2.11. test the perl library installation</a></li>
+<li><a href="#org3a6f518">2.12. create an apache configuration file</a></li>
+<li><a href="#org1448e3a">2.13. install the apache configuration file</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org83b9802" class="outline-2">
-<h2 id="org83b9802"><span class="section-number-2">1.</span> Purpose</h2>
+<div id="outline-container-org8747340" class="outline-2">
+<h2 id="org8747340"><span class="section-number-2">1.</span> Purpose</h2>
 <div class="outline-text-2" id="text-1">
 <ul class="org-ul">
 <li>enable using TPP in our centos7 environment</li>
@@ -111,15 +127,19 @@ $("div.afterTable").html('<hr>');
 </div>
 </div>
 
-<div id="outline-container-orgf9bd2d8" class="outline-2">
-<h2 id="orgf9bd2d8"><span class="section-number-2">2.</span> Methods</h2>
+<div id="outline-container-org59a37f0" class="outline-2">
+<h2 id="org59a37f0"><span class="section-number-2">2.</span> Methods</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Adapt <a href="http://tools.proteomecenter.org/wiki/index.php?title=TPP_6.1.0:_Installing_on_Ubuntu_20.04_LTS">TPP 6.1.0: Installing on Ubuntu 20.04 LTS</a> as needed.
 </p>
+</div>
 
+<div id="outline-container-orgd420f0e" class="outline-3">
+<h3 id="orgd420f0e"><span class="section-number-3">2.1.</span> install libraries</h3>
+<div class="outline-text-3" id="text-2-1">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>install libraries</label><pre class="src src-sh">sudo yum install -y gd-devel
+<pre class="src src-sh">sudo yum install -y gd-devel
 sudo yum install -y libpng-devel
 sudo yum install -y zlib-devel
 sudo yum install -y bzip2-devel
@@ -148,17 +168,27 @@ sudo yum install -y mcrypt
 sudo yum install -y swig
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org93deecf" class="outline-3">
+<h3 id="org93deecf"><span class="section-number-3">2.2.</span> get the source and unpack it in a working directory</h3>
+<div class="outline-text-3" id="text-2-2">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>get the source and unpack it in a working directory</label><pre class="src src-sh">mkdir ~/tpp_source <span style="color: #5F7F5F;">#</span><span style="color: #7F9F7F;">or somehwere you're going to build this thing</span>
+<pre class="src src-sh">mkdir ~/tpp_source <span style="color: #5F7F5F;">#</span><span style="color: #7F9F7F;">or somehwere you're going to build this thing</span>
 <span style="color: #DCDCCC; font-weight: bold;">cd</span> ~tpp_source
 wget https://sourceforge.net/projects/sashimi/files/Trans-Proteomic%20Pipeline%20%28TPP%29/TPP%20v6.1%20%28Parhelion%29%20rev%200/TPP_6.1.0-src.tgz
 tar -zxvf TPP_6.1.0-src.tgz 
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-orgfc7ced3" class="outline-3">
+<h3 id="orgfc7ced3"><span class="section-number-3">2.3.</span> create configuration file included by the make process to come</h3>
+<div class="outline-text-3" id="text-2-3">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>create configuration file included by the make process to come</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> release_6-1-0
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> release_6-1-0
 <span style="color: #DCDCCC; font-weight: bold;">echo</span> <span style="color: #CC9393;">'INSTALL_DIR = /usr/local/tpp'</span> &gt; site.mk
 <span style="color: #DCDCCC; font-weight: bold;">echo</span> <span style="color: #CC9393;">'TPP_DATADIR = /data/tpp'</span> &gt;&gt; site.mk <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">note: recommend not using just '/data', as advised</span>
 <span style="color: #DCDCCC; font-weight: bold;">echo</span> <span style="color: #CC9393;">'TPP_BASEURL = /tpp'</span> &gt;&gt; site.mk
@@ -166,27 +196,42 @@ tar -zxvf TPP_6.1.0-src.tgz
 <span style="color: #DCDCCC; font-weight: bold;">echo</span> <span style="color: #CC9393;">'TPP_PORT = 10401'</span> &gt;&gt; site.mk
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org4d60917" class="outline-3">
+<h3 id="org4d60917"><span class="section-number-3">2.4.</span> create a user to own the tpp install, and directories to install and run the webserver</h3>
+<div class="outline-text-3" id="text-2-4">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>create a user to own the tpp install, and directories to install and run the webserver</label><pre class="src src-sh">sudo useradd --system tpp <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">create tpp user with no home directory</span>
+<pre class="src src-sh">sudo useradd --system tpp <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">create tpp user with no home directory</span>
 sudo mkdir /usr/local/tpp
 sudo mkdir -p /data/tpp
 sudo chown tpp.tpp /usr/local/tpp
 sudo chown apache /data/tpp /usr/local/tpp/<span style="color: #DCDCCC;">{</span>users,log<span style="color: #DCDCCC;">}</span> <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">assuming your webserver is running as the default `apache` user.</span>
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-orge422cbd" class="outline-3">
+<h3 id="orge422cbd"><span class="section-number-3">2.5.</span> move into source directory</h3>
+<div class="outline-text-3" id="text-2-5">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>move into source directory</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> trans_proteomic_pipeline
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> trans_proteomic_pipeline
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8ee51d2" class="outline-3">
+<h3 id="org8ee51d2"><span class="section-number-3">2.6.</span> get a little report on what tpp thinks you're building on</h3>
+<div class="outline-text-3" id="text-2-6">
+<div class="org-src-container">
+<pre class="src src-sh">make info
 </pre>
 </div>
 
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>get a little report on what tpp thinks you're building on</label><pre class="src src-sh">make info
-</pre>
-</div>
-
-<pre class="example" id="org4a9acfd">
+<pre class="example" id="orgf863338">
 ARCH = x86_64
 VENDOR = redhat
 SYSTEM = linux
@@ -207,22 +252,37 @@ TPP_DATAURL = /tpp/data
 
  MZ5_SUPPORT is not enabled
 </pre>
+</div>
+</div>
 
+<div id="outline-container-org0f89f3a" class="outline-3">
+<h3 id="org0f89f3a"><span class="section-number-3">2.7.</span> create your build environment.</h3>
+<div class="outline-text-3" id="text-2-7">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>create your build environment.</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">source</span> /opt/rh/devtoolset-9/enable <span style="color: #5F7F5F;">## </span><span style="color: #7F9F7F;">the newer compiler etc on your PATH</span>
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">source</span> /opt/rh/devtoolset-9/enable <span style="color: #5F7F5F;">## </span><span style="color: #7F9F7F;">the newer compiler etc on your PATH</span>
 <span style="color: #DCDCCC; font-weight: bold;">export</span> <span style="color: #DFAF8F;">LD_LIBRARY_PATH</span>=/usr/lib64:$<span style="color: #DCDCCC;">{</span><span style="color: #DFAF8F;">LD_LIBRARY_PATH</span><span style="color: #DCDCCC;">}</span> <span style="color: #5F7F5F;">## </span><span style="color: #7F9F7F;">needed for location of libc and libm else error: "/opt/rh/devtoolset-9/root/usr/libexec/gcc/x86_64-redhat-linux/9/ld: cannot find -lc"</span>
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org9482d33" class="outline-3">
+<h3 id="org9482d33"><span class="section-number-3">2.8.</span> build it!</h3>
+<div class="outline-text-3" id="text-2-8">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>build it!</label><pre class="src src-sh">make all <span style="color: #5F7F5F;">## </span><span style="color: #7F9F7F;">NB: do NOT provide `-j` or `-k` options to make or problems will ensue.</span>
+<pre class="src src-sh">make all <span style="color: #5F7F5F;">## </span><span style="color: #7F9F7F;">NB: do NOT provide `-j` or `-k` options to make or problems will ensue.</span>
 make all <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">yes, again!</span>
 make all <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">keep doing this till nothing more is made!</span>
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org5f2dee6" class="outline-3">
+<h3 id="org5f2dee6"><span class="section-number-3">2.9.</span> install it!</h3>
+<div class="outline-text-3" id="text-2-9">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>install it!</label><pre class="src src-sh"><span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">I'm installing from NFS share so can't install as root due to f-ing root squash</span>
+<pre class="src src-sh"><span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">I'm installing from NFS share so can't install as root due to f-ing root squash</span>
 sudo chown -R $<span style="color: #DFAF8F;">USER</span> /usr/local/tpp /data/tpp <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">just for a minute....</span>
 make install
 <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">now set them back again, as planned</span>
@@ -230,9 +290,14 @@ sudo chown -R tpp.tpp /usr/local/tpp
 sudo chown -R apache /data/tpp /usr/local/tpp/<span style="color: #DCDCCC;">{</span>users,log<span style="color: #DCDCCC;">}</span>
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org7a17635" class="outline-3">
+<h3 id="org7a17635"><span class="section-number-3">2.10.</span> install any missing perl libraries</h3>
+<div class="outline-text-3" id="text-2-10">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>install any missing perl libraries</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">export</span> <span style="color: #DFAF8F;">PERL_MM_USE_DEFAULT</span>=1
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">export</span> <span style="color: #DFAF8F;">PERL_MM_USE_DEFAULT</span>=1
 yes | sudo cpan install CGI
 sudo cpan install XML::Parser
 yes | sudo cpan install XML::Twig
@@ -243,16 +308,26 @@ sudo cpan install Statistics::Regression
 sudo cpan install Statistics::R 
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-orgc2aa9e5" class="outline-3">
+<h3 id="orgc2aa9e5"><span class="section-number-3">2.11.</span> test the perl library installation</h3>
+<div class="outline-text-3" id="text-2-11">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 11: </span>test the perl library installation</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> /usr/local/tpp/bin
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> /usr/local/tpp/bin
 <span style="color: #DCDCCC; font-weight: bold;">export</span> <span style="color: #DFAF8F;">PERL5LIB</span>=/usr/local/tpp/lib/perl
 ./test_tpi.pl
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org3a6f518" class="outline-3">
+<h3 id="org3a6f518"><span class="section-number-3">2.12.</span> create an apache configuration file</h3>
+<div class="outline-text-3" id="text-2-12">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 12: </span>create an apache configuration file</label><pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> /usr/local/tpp/conf
+<pre class="src src-sh"><span style="color: #DCDCCC; font-weight: bold;">cd</span> /usr/local/tpp/conf
 
 <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">Check your location with: http://www.whatsmyip.org/ and then configure the permission rules accordingly</span>
 <span style="color: #5F7F5F;"># </span><span style="color: #7F9F7F;">cat httpd-2.4-tpp.conf | sed 's/Require ip 10/Require ip 174.250.12/' &gt; httpd-2.4-tpp-1.conf</span>
@@ -263,9 +338,14 @@ sudo cpan install Statistics::R
 cat httpd-2.4-tpp.conf | sed <span style="color: #CC9393;">'s/#Require all granted/Require all granted/'</span> &gt; httpd-2.4-tpp-1.conf
 </pre>
 </div>
+</div>
+</div>
 
+<div id="outline-container-org1448e3a" class="outline-3">
+<h3 id="org1448e3a"><span class="section-number-3">2.13.</span> install the apache configuration file</h3>
+<div class="outline-text-3" id="text-2-13">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 13: </span>install the apache configuration file</label><pre class="src src-sh">sudo cp -p /usr/local/tpp/conf/httpd-2.4-tpp-1.conf /etc/httpd/httpd-tpp.conf
+<pre class="src src-sh">sudo cp -p /usr/local/tpp/conf/httpd-2.4-tpp-1.conf /etc/httpd/httpd-tpp.conf
 sudo systemctl reload apache2 
 </pre>
 </div>
@@ -273,6 +353,7 @@ sudo systemctl reload apache2
 <p>
 You're done.  Test it.
 </p>
+</div>
 </div>
 </div>
 </div>

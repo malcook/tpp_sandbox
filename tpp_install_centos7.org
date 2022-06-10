@@ -21,7 +21,7 @@
 
 Adapt [[http://tools.proteomecenter.org/wiki/index.php?title=TPP_6.1.0:_Installing_on_Ubuntu_20.04_LTS][TPP 6.1.0: Installing on Ubuntu 20.04 LTS]] as needed.
 
-#+caption: install libraries
+**  install libraries
 #+begin_src  sh
 sudo yum install -y gd-devel
 sudo yum install -y libpng-devel
@@ -52,7 +52,7 @@ sudo yum install -y mcrypt
 sudo yum install -y swig
 #+end_src
 
-#+caption: get the source and unpack it in a working directory
+**  get the source and unpack it in a working directory
 #+begin_src  sh
 mkdir ~/tpp_source #or somehwere you're going to build this thing
 cd ~tpp_source
@@ -60,7 +60,7 @@ wget https://sourceforge.net/projects/sashimi/files/Trans-Proteomic%20Pipeline%2
 tar -zxvf TPP_6.1.0-src.tgz 
 #+end_src
 
-#+caption: create configuration file included by the make process to come
+**  create configuration file included by the make process to come
 #+begin_src  sh
 cd release_6-1-0
 echo 'INSTALL_DIR = /usr/local/tpp' > site.mk
@@ -72,7 +72,7 @@ echo 'TPP_PORT = 10401' >> site.mk
 
 #+RESULTS:
 
-#+caption: create a user to own the tpp install, and directories to install and run the webserver
+**  create a user to own the tpp install, and directories to install and run the webserver
 #+begin_src  sh
 sudo useradd --system tpp # create tpp user with no home directory
 sudo mkdir /usr/local/tpp
@@ -81,12 +81,12 @@ sudo chown tpp.tpp /usr/local/tpp
 sudo chown apache /data/tpp /usr/local/tpp/{users,log} # assuming your webserver is running as the default `apache` user.
 #+end_src
 
-#+caption: move into source directory
+**  move into source directory
 #+begin_src  sh
 cd trans_proteomic_pipeline
 #+end_src
 
-#+caption: get a little report on what tpp thinks you're building on
+**  get a little report on what tpp thinks you're building on
 #+begin_src  sh
 make info
 #+end_src
@@ -114,20 +114,20 @@ TPP_DATAURL = /tpp/data
  MZ5_SUPPORT is not enabled
 #+end_example
 
-#+caption: create your build environment.
+**  create your build environment.
 #+begin_src sh
 source /opt/rh/devtoolset-9/enable ## the newer compiler etc on your PATH
 export LD_LIBRARY_PATH=/usr/lib64:${LD_LIBRARY_PATH} ## needed for location of libc and libm else error: "/opt/rh/devtoolset-9/root/usr/libexec/gcc/x86_64-redhat-linux/9/ld: cannot find -lc"
 #+end_src
 
-#+caption: build it!
+**  build it!
 #+begin_src sh
 make all ## NB: do NOT provide `-j` or `-k` options to make or problems will ensue.
 make all # yes, again!
 make all # keep doing this till nothing more is made!
 #+end_src
 
-#+caption: install it!
+**  install it!
 #+begin_src sh
 # I'm installing from NFS share so can't install as root due to f-ing root squash
 sudo chown -R $USER /usr/local/tpp /data/tpp # just for a minute....
@@ -137,7 +137,7 @@ sudo chown -R tpp.tpp /usr/local/tpp
 sudo chown -R apache /data/tpp /usr/local/tpp/{users,log}
 #+end_src
 
-#+caption: install any missing perl libraries
+**  install any missing perl libraries
 #+begin_src  sh
 export PERL_MM_USE_DEFAULT=1
 yes | sudo cpan install CGI
@@ -150,14 +150,14 @@ sudo cpan install Statistics::Regression
 sudo cpan install Statistics::R 
 #+end_src
 
-#+caption: test the perl library installation
+**  test the perl library installation
 #+begin_src  sh
 cd /usr/local/tpp/bin
 export PERL5LIB=/usr/local/tpp/lib/perl
 ./test_tpi.pl
 #+end_src
 
-#+caption: create an apache configuration file
+**  create an apache configuration file
 #+begin_src sh
 cd /usr/local/tpp/conf
 
@@ -170,7 +170,7 @@ cd /usr/local/tpp/conf
 cat httpd-2.4-tpp.conf | sed 's/#Require all granted/Require all granted/' > httpd-2.4-tpp-1.conf
 #+end_src
 
-#+caption: install the apache configuration file
+**  install the apache configuration file
 #+begin_src  sh
 sudo cp -p /usr/local/tpp/conf/httpd-2.4-tpp-1.conf /etc/httpd/httpd-tpp.conf
 sudo systemctl reload apache2 
