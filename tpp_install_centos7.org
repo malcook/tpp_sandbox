@@ -55,7 +55,7 @@ sudo yum install -y swig
 **  get the source and unpack it in a working directory
 #+begin_src  sh
 mkdir ~/tpp_source #or somehwere you're going to build this thing
-cd ~tpp_source
+cd ~/tpp_source
 wget https://sourceforge.net/projects/sashimi/files/Trans-Proteomic%20Pipeline%20%28TPP%29/TPP%20v6.1%20%28Parhelion%29%20rev%200/TPP_6.1.0-src.tgz
 tar -zxvf TPP_6.1.0-src.tgz 
 #+end_src
