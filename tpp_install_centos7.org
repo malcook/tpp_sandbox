@@ -1,16 +1,10 @@
 # -*- org-export-babel-evaluate: nil; org-export-allow-bind-keywords: t; -*-
 #+AUTHOR: Malcolm Cook;
 #+EMAIL: malcolm_cook@stowers.org
-#+TITLE: installing tpp on CentOS 7 - one man's journey
+#+TITLE: Installing Trans Proteomic Pipeline (TPP) on CentOS 7
 
 #+SETUPFILE: ~mec/.emacs.d/org/SETUPFILE.org
-
-#+PROPERTY: header-args:R :session *R:SCI-004255-ZFPROT*
-# # :results value :exports both :colnames yes
 #+PROPERTY: header-args:sh :session *shell* :results output :exports both :colnames yes :width 10 :height 7.5 :units in
-#+PROPERTY: header-args:sqlite :db grn.db :results value :colnames yes
-#+OPTIONS: pri:t
-#+PRIORITIES: A C B D E
 
 * Purpose
 
@@ -170,16 +164,56 @@ cd /usr/local/tpp/conf
 cat httpd-2.4-tpp.conf | sed 's/#Require all granted/Require all granted/' > httpd-2.4-tpp-1.conf
 #+end_src
 
-**  install the apache configuration file
+**  install the apache configuration file for TPP
+
 #+begin_src  sh
 sudo cp -p /usr/local/tpp/conf/httpd-2.4-tpp-1.conf /etc/httpd/httpd-tpp.conf
-sudo systemctl reload apache2 
+sudo apachectl restart
+#+end_src
+
+** comment out AddDefaultCharset directive in apache's configuration file
+
+Without doing so, ProteinProphet will generate *.prot.xml files
+wherein any long deflines appearing in the fasta database are
+truncated at 120 characters, with a trailing non-breaking space, which
+result in downstream errors, e.g. during parsing by tpp2mzid as
+reported: [[https://groups.google.com/g/spctools-discuss/c/r1L_MKNlbCM][tpp2mzid: error 4: Syntax error parsing XML]].
+
+#+begin_src sh
+sudo perl -p -i -e 's/^AddDefaultCharset/#AddDefaultCharset/' /etc/httpd/conf/httpd.conf
 #+end_src
 
 You're done.  Test it.
 
+* COMMENT: determining the need to comment out AddDefaultCharset
 
 
 
 
+#+begin_src 
+PATH=/usr/local/tpp/cgi-bin:"${PATH}"
+PATH=/usr/local/tpp/bin:"${PATH}"
 
+mkdir /tmp/tpptest
+cd  /tmp/tpptest
+
+fetchDataset.pl --verbose 1 --identifier http://www.peptideatlas.org/export/refData/QuickYeastUPS1.zip --destination .
+cd QuickYeastUPS1
+
+USER=`whoami`
+LANG=C
+LANG=en_US.UTF-8
+b=${USER}_${LANG}
+
+comet -P/data/tpp/params/comet.params -N${b} -DYeast_UPS_cRAP.fasta UPS1_50000amol_R1.mzML
+xinteract -N${b}.pep.xml -p0.0 -l7 -PPM -OA -iP /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.pep.xml
+ProteinProphet ${b}.ipro.pep.xml ${b}.prot.xml IPROPHET
+
+
+
+x
+
+comet -P/data/tpp/tests/QuickYeastUPS1/comet.params -N -D/data/tpp/tests/QuickYeastUPS1/Yeast_UPS_cRAP.120plus.fasta /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.mzML
+comet -P/data/tpp/tests/QuickYeastUPS1/comet.params -Nt1 -D/data/tpp/tests/QuickYeastUPS1/Yeast_UPS_cRAP.fasta /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.mzML
+
+#+end_src
