@@ -181,6 +181,7 @@ reported: [[https://groups.google.com/g/spctools-discuss/c/r1L_MKNlbCM][tpp2mzid
 
 #+begin_src sh
 sudo perl -p -i -e 's/^AddDefaultCharset/#AddDefaultCharset/' /etc/httpd/conf/httpd.conf
+sudo apachectl restart
 #+end_src
 
 You're done.  Test it.
