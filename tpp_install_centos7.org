@@ -185,35 +185,3 @@ sudo perl -p -i -e 's/^AddDefaultCharset/#AddDefaultCharset/' /etc/httpd/conf/ht
 
 You're done.  Test it.
 
-* COMMENT: determining the need to comment out AddDefaultCharset
-
-
-
-
-#+begin_src 
-PATH=/usr/local/tpp/cgi-bin:"${PATH}"
-PATH=/usr/local/tpp/bin:"${PATH}"
-
-mkdir /tmp/tpptest
-cd  /tmp/tpptest
-
-fetchDataset.pl --verbose 1 --identifier http://www.peptideatlas.org/export/refData/QuickYeastUPS1.zip --destination .
-cd QuickYeastUPS1
-
-USER=`whoami`
-LANG=C
-LANG=en_US.UTF-8
-b=${USER}_${LANG}
-
-comet -P/data/tpp/params/comet.params -N${b} -DYeast_UPS_cRAP.fasta UPS1_50000amol_R1.mzML
-xinteract -N${b}.pep.xml -p0.0 -l7 -PPM -OA -iP /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.pep.xml
-ProteinProphet ${b}.ipro.pep.xml ${b}.prot.xml IPROPHET
-
-
-
-x
-
-comet -P/data/tpp/tests/QuickYeastUPS1/comet.params -N -D/data/tpp/tests/QuickYeastUPS1/Yeast_UPS_cRAP.120plus.fasta /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.mzML
-comet -P/data/tpp/tests/QuickYeastUPS1/comet.params -Nt1 -D/data/tpp/tests/QuickYeastUPS1/Yeast_UPS_cRAP.fasta /data/tpp/tests/QuickYeastUPS1/UPS1_50000amol_R1.mzML
-
-#+end_src
